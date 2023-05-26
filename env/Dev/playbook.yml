@@ -1,0 +1,34 @@
+- hosts: terraform-ansible
+  tasks:
+  - name: instalando o python3, virtualenv
+    apt:
+      pkg:
+      - python3
+      - virtualenv
+      update_cache: yes
+    become: yes
+  - name: Instalando dependencias com pip (Django e Django Rest)
+    pip:
+      virtualenv: /home/ubuntu/meuapp/venv
+      name:
+        - django
+        - djangorestframework
+  - name: Verificando se o projeto já existe
+    stat:
+      path: /home/ubuntu/meuapp/setup/settings.py
+    register: projeto
+  - name: Iniciando o projeto
+    shell: ". /home/ubuntu/meuapp/venv/bin/activate; django-admin startproject setup /home/ubuntu/meuapp"
+    when: not projeto.stat.exists
+  - name: Alterando o hosts do settings do Django
+    lineinfile:
+      path: /home/ubuntu/meuapp/setup/settings.py
+      regexp: 'ALLOWED_HOSTS'
+      line: 'ALLOWED_HOSTS = ["*"]'
+      backrefs: yes
+  # - name: criando o arquivo
+  #   copy:
+  #     dest: /home/ubuntu/index.html
+  #     content: <h1>Feito com terraform e ansible</h1>
+  # - name: criando o servidor
+  #   shell: "nohup busybox httpd -f -p 8080 &"
